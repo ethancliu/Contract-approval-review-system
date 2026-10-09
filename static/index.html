@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企业合同审批自动审查系统 · 调用端</title>
+<style>
+/* ==================================================================
+   全局样式
+   ================================================================== */
+:root{
+  --bg:#0f1420; --bg2:#151c2c; --panel:#1a2233; --panel2:#212b3f;
+  --line:#2b3752; --text:#e6ecf7; --muted:#8fa0bf; --dim:#63739a;
+  --brand:#3b82f6; --brand2:#2563eb;
+  --high:#ef4444; --mid:#f59e0b; --low:#10b981; --info:#38bdf8;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.6;
+}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input,select{font-family:inherit;outline:none}
+a{color:var(--info);text-decoration:none}
+
+/* ---------- 布局 ---------- */
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:216px;flex:0 0 216px;background:var(--bg2);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.logo{padding:20px 18px 14px;border-bottom:1px solid var(--line)}
+.logo h1{font-size:15px;font-weight:600;letter-spacing:.5px}
+.logo p{font-size:11px;color:var(--dim);margin-top:4px}
+.nav{padding:10px 8px;flex:1}
+.nav .group{font-size:11px;color:var(--dim);padding:12px 10px 6px;letter-spacing:1px}
+.nav button{
+  display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border-radius:8px;
+  background:transparent;color:var(--muted);font-size:13px;text-align:left;margin-bottom:2px;
+}
+.nav button:hover{background:var(--panel);color:var(--text)}
+.nav button.on{background:var(--brand);color:#fff;font-weight:600}
+.nav button .ico{font-size:14px;width:16px;text-align:center}
+.nav .badge{margin-left:auto;background:var(--high);color:#fff;border-radius:9px;
+  padding:0 6px;font-size:11px;line-height:16px;min-width:16px;text-align:center}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:56px;display:flex;align-items:center;gap:14px;padding:0 22px;
+  background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;
+}
+.topbar .title{font-size:15px;font-weight:600}
+.topbar .spacer{flex:1}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot.ok{background:var(--low)} .dot.bad{background:var(--high)}
+.content{padding:20px 22px 60px;max-width:1600px}
+
+/* ---------- 提示条 ---------- */
+.notice{
+  display:flex;align-items:flex-start;gap:10px;background:rgba(59,130,246,.1);
+  border:1px solid rgba(59,130,246,.32);border-radius:var(--radius);
+  padding:11px 14px;margin-bottom:16px;font-size:13px;color:#bcd4f7;
+}
+.notice.warn{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.35);color:#f7d9a5}
+.notice.err{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35);color:#f7b3b3}
+
+/* ---------- 卡片 ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px}
+.card > h3{
+  font-size:14px;font-weight:600;padding:13px 18px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.card > h3 .sub{font-size:12px;color:var(--dim);font-weight:400}
+.card > h3 .spacer{flex:1}
+.card .body{padding:16px 18px}
+.card .body.tight{padding:0}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  background:var(--brand);color:#fff;padding:7px 14px;border-radius:7px;font-size:13px;
+  transition:.15s;white-space:nowrap;
+}
+.btn:hover{background:var(--brand2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.btn.ghost:hover{background:var(--panel2);color:var(--text)}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.danger{background:var(--high)}
+.btn.ok{background:var(--low)}
+.btn.warn{background:var(--mid);color:#20160a}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ---------- 表单 ---------- */
+.field{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.field label{font-size:12px;color:var(--muted)}
+input[type=text],input[type=number],select{
+  background:var(--bg);border:1px solid var(--line);color:var(--text);
+  padding:7px 11px;border-radius:7px;font-size:13px;min-width:170px;
+}
+input:focus,select:focus{border-color:var(--brand)}
+
+/* ---------- 表格 ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  text-align:left;padding:10px 14px;background:var(--panel2);color:var(--muted);
+  font-weight:600;font-size:12px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+td{padding:10px 14px;border-bottom:1px solid rgba(43,55,82,.6);vertical-align:top}
+tbody tr:hover{background:rgba(59,130,246,.06)}
+tbody tr.sel{background:rgba(59,130,246,.14)}
+tbody tr:last-child td{border-bottom:none}
+.empty{padding:34px;text-align:center;color:var(--dim);font-size:13px}
+
+/* ---------- 标签 ---------- */
+.tag{display:inline-block;padding:1px 9px;border-radius:11px;font-size:12px;line-height:19px;white-space:nowrap}
+.tag.high{background:rgba(239,68,68,.16);color:#ff8484;border:1px solid rgba(239,68,68,.4)}
+.tag.mid{background:rgba(245,158,11,.16);color:#fcc15c;border:1px solid rgba(245,158,11,.4)}
+.tag.low{background:rgba(16,185,129,.16);color:#4ade9f;border:1px solid rgba(16,185,129,.4)}
+.tag.gray{background:rgba(143,160,191,.14);color:var(--muted);border:1px solid var(--line)}
+.tag.blue{background:rgba(56,189,248,.16);color:#7dd3fc;border:1px solid rgba(56,189,248,.4)}
+.tag.red{background:rgba(239,68,68,.16);color:#ff8484;border:1px solid rgba(239,68,68,.4)}
+
+/* ---------- 统计卡 ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px}
+.stat .k{font-size:12px;color:var(--dim)}
+.stat .v{font-size:26px;font-weight:700;margin-top:5px;line-height:1.2}
+.stat .v.small{font-size:16px;font-weight:600}
+
+/* ---------- 键值对 ---------- */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2px 22px}
+.kv .row{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed rgba(43,55,82,.7);font-size:13px}
+.kv .row .k{color:var(--dim);flex:0 0 124px}
+.kv .row .v{flex:1;word-break:break-all}
+
+/* ---------- 代码 / 原文片段 ---------- */
+code{
+  background:var(--bg);border:1px solid var(--line);border-radius:5px;
+  padding:1px 6px;font-family:Consolas,Monaco,monospace;font-size:12px;color:#9fd0ff;
+}
+.evidence{
+  background:var(--bg);border-left:3px solid var(--brand);border-radius:0 6px 6px 0;
+  padding:9px 13px;margin:7px 0;font-size:13px;color:#cfe0fa;white-space:pre-wrap;
+  word-break:break-word;font-family:Consolas,"Microsoft YaHei",monospace;line-height:1.7;
+}
+.pos{font-size:12px;color:var(--dim);margin-top:5px}
+.pos b{color:#7dd3fc;font-weight:600}
+.comment-box{
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:16px 18px;
+  white-space:pre-wrap;font-family:Consolas,"Microsoft YaHei",monospace;font-size:12.5px;
+  line-height:1.85;max-height:520px;overflow-y:auto;color:#d5e2f7;
+}
+.hit{border:1px solid var(--line);border-radius:9px;padding:13px 15px;margin-bottom:11px;background:var(--panel2)}
+.hit.high{border-left:3px solid var(--high)}
+.hit.mid{border-left:3px solid var(--mid)}
+.hit.low{border-left:3px solid var(--low)}
+.hit .head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+.hit .name{font-weight:600;font-size:13.5px}
+.hit .lbl{font-size:12px;color:var(--dim);margin-top:8px;margin-bottom:2px}
+
+/* ---------- 字段表 ---------- */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:12px}
+.fitem{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+.fitem.miss{border-color:rgba(239,68,68,.36);background:rgba(239,68,68,.05)}
+.fitem .fh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.fitem .fh .fn{font-size:12.5px;color:var(--muted);font-weight:600}
+.fitem .fv{font-size:14px;font-weight:600;color:#d9e7ff;word-break:break-all;margin-bottom:4px}
+.fitem .fv.none{color:var(--muted);font-weight:400;font-style:italic}
+
+/* ---------- 折叠 ---------- */
+details{border:1px solid var(--line);border-radius:8px;margin-top:10px;background:var(--bg)}
+details summary{padding:9px 13px;cursor:pointer;font-size:12.5px;color:var(--muted);user-select:none}
+details summary:hover{color:var(--text)}
+details[open] summary{border-bottom:1px solid var(--line)}
+details .inner{padding:12px 14px}
+
+/* ---------- 日志 ---------- */
+.log-line{display:flex;gap:11px;padding:6px 14px;border-bottom:1px solid rgba(43,55,82,.5);font-size:12.5px}
+.log-line:hover{background:rgba(59,130,246,.06)}
+.log-line .t{color:var(--dim);flex:0 0 148px;font-family:Consolas,monospace}
+.log-line .lv{flex:0 0 52px;font-weight:600}
+.log-line .lv.INFO{color:var(--low)} .log-line .lv.WARN{color:var(--mid)} .log-line .lv.ERROR{color:var(--high)}
+.log-line .msg{flex:1;word-break:break-word;color:#c3d3ea}
+
+/* ---------- 加载 / 吐司 ---------- */
+.loading{padding:40px;text-align:center;color:var(--dim)}
+.spinner{
+  width:22px;height:22px;border:2.5px solid var(--line);border-top-color:var(--brand);
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;right:22px;bottom:22px;z-index:99;display:flex;flex-direction:column;gap:9px}
+.toast{
+  padding:11px 17px;border-radius:9px;font-size:13px;box-shadow:0 8px 26px rgba(0,0,0,.45);
+  max-width:430px;animation:slide .25s ease;word-break:break-word;
+}
+.toast.ok{background:#0d3f2e;border:1px solid var(--low);color:#8ef0c0}
+.toast.err{background:#43171a;border:1px solid var(--high);color:#ffb0b0}
+.toast.info{background:#132a4d;border:1px solid var(--brand);color:#b6d2fb}
+@keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- ============ 侧边导航 ============ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>合同审批自动审查</h1>
+      <p>智能审查工具服务 · 调用端</p>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="group">审查主流程</div>
+      <button data-view="overview" class="on"><span class="ico">▤</span>系统总览</button>
+      <button data-view="pending"><span class="ico">①</span>待办调用</button>
+      <button data-view="detail"><span class="ico">②</span>详情查看</button>
+      <button data-view="parse"><span class="ico">③</span>解析结果</button>
+      <button data-view="hits"><span class="ico">④</span>规则命中</button>
+      <button data-view="result"><span class="ico">⑤</span>结果处理</button>
+      <div class="group">运维管理</div>
+      <button data-view="blocked"><span class="ico">⚠</span>阻塞重试<span class="badge hidden" id="blockedBadge">0</span></button>
+      <button data-view="rules"><span class="ico">⚙</span>规则管理</button>
+      <button data-view="logs"><span class="ico">≡</span>运行日志</button>
+    </nav>
+    <div style="padding:12px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--dim)">
+      v1.0.0 · 仅辅助人工审批
+    </div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <div class="main">
+    <div class="topbar">
+      <span class="title" id="viewTitle">系统总览</span>
+      <span class="spacer"></span>
+      <span id="currentTask" style="font-size:12px;color:var(--dim)"></span>
+      <span style="font-size:12px;color:var(--muted)" id="healthText"><span class="dot bad"></span>连接中…</span>
+    </div>
+
+    <div class="content">
+      <div class="notice">
+        <span>ℹ️</span>
+        <span><b>本系统仅辅助人工审批，不替代人工审核决策。</b>
+        系统自动完成合同拉取、附件下载、文档解析 / OCR 识别、规则风控、结果入库与评论回写，
+        输出的全部风险结论与整改建议均<b>仅供参考</b>，最终审批权归人工法务与审批人。</span>
+      </div>
+
+      <!-- ==================== 系统总览 ==================== -->
+      <section id="view-overview">
+        <div class="stats" id="ovStats"></div>
+        <div class="card">
+          <h3>待处理审批任务
+            <span class="sub">点击任意行进入「详情查看 → 解析结果 → 规则命中 → 结果处理」完整链路</span>
+          </h3>
+          <div class="body tight" id="ovTasks"><div class="empty">加载中…</div></div>
+        </div>
+      </section>
+
+      <!-- ==================== ① 待办调用 ==================== -->
+      <section id="view-pending" class="hidden">
+        <div class="card">
+          <h3>① 待办调用模块
+            <span class="sub">工具 1：list_pending_contract_approvals(limit)</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>拉取条数</label>
+                <input type="number" id="pendingLimit" value="10" min="1" max="200" style="min-width:90px">
+              </div>
+              <button class="btn" onclick="loadPending()">拉取待审审批单</button>
+              <button class="btn ghost" onclick="syncTasks()">拉取并去重入库</button>
+              <button class="btn warn" onclick="runAllPipeline()">一键闭环（拉取→审查→回写）</button>
+            </div>
+            <div id="pendingHint" style="margin-top:12px;font-size:12.5px;color:var(--dim)"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>待审审批单列表 <span class="sub">必含字段：审批编号 / 标题 / 申请人 / 申请时间 / 附件数量</span></h3>
+          <div class="body tight" id="pendingTable"><div class="empty">点击上方「拉取待审审批单」开始</div></div>
+        </div>
+      </section>
+
+      <!-- ==================== ② 详情查看 ==================== -->
+      <section id="view-detail" class="hidden">
+        <div class="card">
+          <h3>② 详情查看模块
+            <span class="sub">工具 2：get_contract_approval(instance_id) + 工具 3：download_contract_attachment(…)</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>审批编号</label>
+                <input type="text" id="detailInstance" placeholder="HTSP20261009001">
+              </div>
+              <button class="btn" onclick="loadDetail()">查询审批详情</button>
+              <button class="btn ok" onclick="runOnePipeline()">一键执行本任务闭环</button>
+            </div>
+          </div>
+        </div>
+        <div id="detailBox"><div class="empty">请选择或输入审批编号后查询</div></div>
+      </section>
+
+      <!-- ==================== ③ 解析结果 ==================== -->
+      <section id="view-parse" class="hidden">
+        <div class="card">
+          <h3>③ 解析结果模块
+            <span class="sub">工具 4：parse_contract_document(document_id)</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>文档标识</label>
+                <input type="text" id="parseDocId" placeholder="attach:12 或 审批编号">
+              </div>
+              <button class="btn" onclick="doParse()">解析文档</button>
+              <button class="btn ghost" onclick="loadParseFromDetail()">读取已入库解析结果</button>
+            </div>
+            <div id="parseHint" style="margin-top:12px;font-size:12.5px;color:var(--dim)"></div>
+          </div>
+        </div>
+        <div id="parseBox"><div class="empty">尚未解析</div></div>
+      </section>
+
+      <!-- ==================== ④ 规则命中 ==================== -->
+      <section id="view-hits" class="hidden">
+        <div class="card">
+          <h3>④ 规则命中模块
+            <span class="sub">工具 5：run_contract_rules(case_id)</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>案件标识</label>
+                <input type="text" id="rulesCaseId" placeholder="任务ID 或 审批编号">
+              </div>
+              <button class="btn" onclick="doRunRules()">执行规则审查</button>
+              <button class="btn ghost" onclick="loadHitsFromDetail()">读取已入库命中</button>
+            </div>
+          </div>
+        </div>
+        <div id="hitsBox"><div class="empty">尚未执行规则审查</div></div>
+      </section>
+
+      <!-- ==================== ⑤ 结果处理 ==================== -->
+      <section id="view-result" class="hidden">
+        <div class="card">
+          <h3>⑤ 结果处理模块
+            <span class="sub">工具 6：save_review_result(…) + 工具 7：write_approval_comment(instance_id, review_id)</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <button class="btn" onclick="doSaveResult()">保存审查结果</button>
+              <button class="btn warn" onclick="doWriteComment()">回写审批评论</button>
+              <button class="btn ghost" onclick="loadResultFromDetail()">刷新状态</button>
+            </div>
+            <div id="resultHint" style="margin-top:12px;font-size:12.5px;color:var(--dim)"></div>
+          </div>
+        </div>
+        <div id="resultBox"><div class="empty">尚未产生审查结果</div></div>
+      </section>
+
+      <!-- ==================== 阻塞重试 ==================== -->
+      <section id="view-blocked" class="hidden">
+        <div class="card">
+          <h3>异常阻塞任务与人工重试
+            <span class="sub">5 类阻塞场景：附件缺失 / 扫描件无法识别 / 文档内容为空 / 外部接口失败 / 文件解析异常</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>操作人</label>
+                <input type="text" id="operator" value="系统管理员" style="min-width:140px">
+              </div>
+              <button class="btn ghost" onclick="loadBlocked()">刷新阻塞任务</button>
+              <button class="btn warn" onclick="retryAllBlocked()">批量重试全部阻塞任务</button>
+            </div>
+            <div class="notice warn" style="margin:14px 0 0">
+              <span>⚠️</span>
+              <span>重试前系统会自动重新拉取审批单最新详情（同步申请人新补传的附件），
+              再回归 parsing → reviewing → 回写流程。若原始材料本身不可用，重试后仍会保持阻塞，
+              系统不会给出猜测性结论。</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="body tight" id="blockedTable"><div class="empty">加载中…</div></div>
+        </div>
+      </section>
+
+      <!-- ==================== 规则管理 ==================== -->
+      <section id="view-rules" class="hidden">
+        <div class="card">
+          <h3>风控规则库
+            <span class="sub">匹配模式：keyword（关键词）/ regex（正则）/ missing（缺失检测）/ logic（逻辑判断）</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>状态</label>
+                <select id="ruleStatusFilter" onchange="loadRules()">
+                  <option value="">全部</option>
+                  <option value="enabled">启用</option>
+                  <option value="disabled">停用</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>关键字</label>
+                <input type="text" id="ruleKeyword" placeholder="规则编码 / 名称 / 匹配内容">
+              </div>
+              <button class="btn ghost" onclick="loadRules()">查询</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="body tight" id="rulesTable"><div class="empty">加载中…</div></div>
+        </div>
+      </section>
+
+      <!-- ==================== 运行日志 ==================== -->
+      <section id="view-logs" class="hidden">
+        <div class="card">
+          <h3>全链路运行日志
+            <span class="sub">拉取 / 附件 / 解析 / 规则 / 回写 / 任务状态流转 全过程留痕</span>
+          </h3>
+          <div class="body">
+            <div class="toolbar">
+              <div class="field">
+                <label>任务ID</label>
+                <input type="number" id="logTaskId" placeholder="留空=全部" style="min-width:120px">
+              </div>
+              <div class="field">
+                <label>级别</label>
+                <select id="logLevel">
+                  <option value="">全部</option><option>INFO</option><option>WARN</option><option>ERROR</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>类型</label>
+                <select id="logType">
+                  <option value="">全部</option>
+                  <option>FETCH</option><option>ATTACHMENT</option><option>PARSE</option>
+                  <option>RULE</option><option>WRITE</option><option>TASK</option>
+                  <option>API</option><option>ERROR</option>
+                </select>
+              </div>
+              <button class="btn ghost" onclick="loadLogs()">查询日志</button>
+              <button class="btn ghost" onclick="loadCommentLogs()">查询回写日志</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="body tight" id="logsBox"><div class="empty">点击「查询日志」获取运行留痕</div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ==================================================================
+   一、基础设施：状态、请求、提示
+   ================================================================== */
+const S = {
+  view: 'overview',
+  taskId: null,        // 当前选中任务ID（approval_tasks.id）
+  code: '',            // 当前选中审批编号
+  detail: null,        // 当前任务详情聚合
+  parse: null,         // 当前解析结果
+  review: null,        // 当前审查结果（含 review_id）
+  hitResult: null,     // 工具5 直接返回的命中结果
+  pending: [],         // 待办列表
+};
+
+const VIEW_TITLE = {
+  overview: '系统总览', pending: '① 待办调用', detail: '② 详情查看',
+  parse: '③ 解析结果', hits: '④ 规则命中', result: '⑤ 结果处理',
+  blocked: '阻塞任务重试', rules: '规则管理', logs: '运行日志',
+};
+
+/** 统一请求封装：返回 {ok, data, http, error} */
+async function api(method, path, body, params) {
+  let url = path;
+  if (params) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== '' && v !== null && v !== undefined) q.append(k, v); });
+    const qs = q.toString();
+    if (qs) url += (url.includes('?') ? '&' : '?') + qs;
+  }
+  const opt = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined && body !== null) opt.body = JSON.stringify(body);
+  try {
+    const resp = await fetch(url, opt);
+    let data = null;
+    const text = await resp.text();
+    try { data = text ? JSON.parse(text) : null; } catch (e) { data = { raw: text }; }
+    if (!resp.ok) {
+      const msg = (data && (data.message || data.detail || data.error)) || ('HTTP ' + resp.status);
+      return { ok: false, data, http: resp.status, error: typeof msg === 'string' ? msg : JSON.stringify(msg) };
+    }
+    return { ok: true, data, http: resp.status };
+  } catch (e) {
+    return { ok: false, data: null, http: 0, error: '网络请求失败：' + e.message };
+  }
+}
+
+function toast(msg, kind) {
+  kind = kind || 'info';
+  const box = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = '.3s'; }, 4200);
+  setTimeout(() => el.remove(), 4600);
+}
+
+/** HTML 转义（防止原文片段破坏页面结构） */
+function esc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/** 风险等级 → 样式类 */
+function riskCls(level) {
+  if (level === '高') return 'high';
+  if (level === '中') return 'mid';
+  if (level === '低') return 'low';
+  return 'gray';
+}
+function riskTag(level) {
+  if (!level) return '<span class="tag gray">未判定</span>';
+  return '<span class="tag ' + riskCls(level) + '">' + esc(level) + '风险</span>';
+}
+function statusTag(text, kind) {
+  return '<span class="tag ' + (kind || 'gray') + '">' + esc(text) + '</span>';
+}
+function taskStatusTag(s) {
+  const map = { done: 'low', blocked: 'red', parsing: 'blue', reviewing: 'blue', pending: 'gray' };
+  return statusTag(s.cn || s.raw, map[s.raw] || 'gray');
+}
+function writeStatusTag(raw, cn) {
+  const map = { success: 'low', failed: 'red', writing: 'blue', not_written: 'gray' };
+  return statusTag(cn || raw, map[raw] || 'gray');
+}
+
+function show(html) {
+  return '<div class="empty">' + esc(html) + '</div>';
+}
+function loading(text) {
+  return '<div class="loading"><div class="spinner"></div>' + esc(text || '处理中…') + '</div>';
+}
+/** 取当前点击的按钮（兼容内联 onclick 与编程调用两种场景） */
+function currentBtn() {
+  try { return (typeof event !== 'undefined' && event && event.target) ? event.target : null; }
+  catch (e) { return null; }
+}
+function busy(btn, on, text) {
+  if (!btn) return;
+  if (on) { btn.dataset.old = btn.textContent; btn.textContent = text || '处理中…'; btn.disabled = true; }
+  else { btn.textContent = btn.dataset.old || btn.textContent; btn.disabled = false; }
+}
+
+/* ==================================================================
+   二、视图切换
+   ================================================================== */
+function switchView(view) {
+  S.view = view;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  document.querySelectorAll('.content > section').forEach(s => s.classList.add('hidden'));
+  const target = document.getElementById('view-' + view);
+  if (target) target.classList.remove('hidden');
+  document.getElementById('viewTitle').textContent = VIEW_TITLE[view] || view;
+
+  if (view === 'overview') loadOverview();
+  if (view === 'blocked') loadBlocked();
+  if (view === 'rules') loadRules();
+  if (view === 'logs') loadLogs();
+  if (view === 'detail' && !S.code) autoPickFirstTask();
+}
+document.getElementById('nav').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-view]');
+  if (btn) switchView(btn.dataset.view);
+});
+
+/** 自动挑一个已入库任务作为默认上下文，降低演示操作成本 */
+async function autoPickFirstTask() {
+  const r = await api('GET', '/api/tasks');
+  if (r.ok && r.data.list.length) {
+    selectTask(r.data.list[0].task_id, r.data.list[0].approval_code, false);
+    loadDetail();
+  }
+}
+
+/** 选中任务：贯穿详情 → 解析 → 规则 → 结果 四个模块 */
+function selectTask(taskId, code, doJump) {
+  S.taskId = taskId;
+  S.code = code || '';
+  S.parse = null; S.review = null; S.hitResult = null; S.detail = null;
+
+  document.getElementById('detailInstance').value = S.code;
+  document.getElementById('parseDocId').value = 'attach:' + taskId;  // 占位，详情加载后会修正为真实附件ID
+  document.getElementById('rulesCaseId').value = taskId;
+  document.getElementById('currentTask').innerHTML =
+    '当前任务：<code>' + esc(S.code) + '</code>　ID <code>' + esc(taskId) + '</code>';
+
+  if (doJump !== false) switchView('detail');
+}
+
+/* ==================================================================
+   三、健康检查 + 总览
+   ================================================================== */
+async function checkHealth() {
+  const r = await api('GET', '/api/health');
+  const el = document.getElementById('healthText');
+  if (r.ok && r.data.status === 'ok') {
+    el.innerHTML = '<span class="dot ok"></span>服务正常 · 规则 ' + r.data.database.rule_count + ' 条';
+  } else {
+    el.innerHTML = '<span class="dot bad"></span>服务不可用';
+  }
+}
+
+async function loadOverview() {
+  const box = document.getElementById('ovStats');
+  const list = document.getElementById('ovTasks');
+  list.innerHTML = loading('加载任务列表…');
+  const r = await api('GET', '/api/overview');
+  if (!r.ok) { list.innerHTML = show('总览加载失败：' + r.error); return; }
+
+  const statusCn = { pending: '待处理', parsing: '解析中', reviewing: '审查中', blocked: '异常阻塞', done: '处理完成' };
+  const byStatus = Object.entries(r.data.task_by_status || {})
+    .map(([k, v]) => (statusCn[k] || k) + ' ' + v).join(' · ') || '暂无数据';
+  const byRisk = Object.entries(r.data.task_by_risk || {})
+    .map(([k, v]) => k + '风险 ' + v).join(' · ') || '暂无数据';
+
+  box.innerHTML = `
+    <div class="stat"><div class="k">已入库审批任务</div><div class="v">${r.data.task_total}</div>
+      <div class="k" style="margin-top:5px">${esc(byStatus)}</div></div>
+    <div class="stat"><div class="k">风险等级分布</div>
+      <div class="v small" style="margin-top:9px">${esc(byRisk)}</div>
+      <div class="k" style="margin-top:5px">按每个任务最新结论统计</div></div>
+    <div class="stat"><div class="k">启用风控规则</div><div class="v">${r.data.enabled_rule_count}</div>
+      <div class="k" style="margin-top:5px">覆盖 11 类必备风险场景</div></div>
+    <div class="stat"><div class="k">当前有效命中</div><div class="v">${r.data.hit_total}</div>
+      <div class="k" style="margin-top:5px">统计于 ${esc(r.data.generated_at)}</div></div>`;
+
+  const t = await api('GET', '/api/tasks');
+  if (!t.ok) { list.innerHTML = show('任务列表加载失败：' + t.error); return; }
+  if (!t.data.list.length) { list.innerHTML = show('暂无任务，请先在「待办调用」模块拉取审批单'); return; }
+
+  list.innerHTML = `<table><thead><tr>
+      <th>ID</th><th>审批编号</th><th>审批标题</th><th>申请人</th>
+      <th>附件</th><th>任务状态</th><th>回写状态</th><th>风险等级</th><th>命中</th><th>阻塞原因</th><th></th>
+    </tr></thead><tbody>${t.data.list.map(i => `
+      <tr class="${i.task_id === S.taskId ? 'sel' : ''}">
+        <td>${i.task_id}</td>
+        <td><code>${esc(i.approval_code)}</code></td>
+        <td>${esc(i.approval_title)}</td>
+        <td>${esc(i.applicant_name)}</td>
+        <td>${i.attachment_count}</td>
+        <td>${taskStatusTag({ raw: i.task_status, cn: i.task_status_cn })}</td>
+        <td>${writeStatusTag(i.write_status, i.write_status_cn)}</td>
+        <td>${i.overall_risk_level ? riskTag(i.overall_risk_level) : '<span class="tag gray">—</span>'}</td>
+        <td>${i.hit_count}</td>
+        <td style="color:#f7b3b3;font-size:12px">${esc(i.block_reason || '-')}</td>
+        <td><button class="btn sm" onclick="selectTask(${i.task_id},'${esc(i.approval_code)}')">进入审查</button></td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+/* ==================================================================
+   四、① 待办调用模块
+   ================================================================== */
+async function loadPending() {
+  const box = document.getElementById('pendingTable');
+  const hint = document.getElementById('pendingHint');
+  box.innerHTML = loading('正在调用审批系统接口拉取待办…');
+  const limit = parseInt(document.getElementById('pendingLimit').value) || 10;
+  const r = await api('POST', '/api/tools/list_pending_contract_approvals', { limit });
+
+  if (!r.ok) {
+    box.innerHTML = show('拉取失败：' + r.error);
+    hint.innerHTML = '<span style="color:#ff8484">调用失败，请确认审批系统可用（APPROVAL_BASE_URL 配置）。</span>';
+    return;
+  }
+  S.pending = r.data.list;
+  hint.innerHTML = `共拉取 <b style="color:#7dd3fc">${r.data.list.length}</b> 条待处理审批单，拉取时间 ${esc(r.data.fetch_time)}`;
+
+  box.innerHTML = `<table><thead><tr>
+      <th>审批编号</th><th>审批标题</th><th>申请人</th><th>申请时间</th><th>附件数量</th><th>审批状态</th><th>操作</th>
+    </tr></thead><tbody>${r.data.list.map(i => `
+      <tr>
+        <td><code>${esc(i.approval_code)}</code></td>
+        <td>${esc(i.approval_title)}</td>
+        <td>${esc(i.applicant_name)}</td>
+        <td>${esc(i.apply_time)}</td>
+        <td>${i.attachment_count > 0
+              ? '<span class="tag blue">' + i.attachment_count + '</span>'
+              : '<span class="tag red">0（将触发附件缺失阻塞）</span>'}</td>
+        <td>${statusTag(i.status, 'gray')}</td>
+        <td><button class="btn sm ghost" onclick="showApprovalDetail('${esc(i.approval_code)}')">查看详情</button></td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+async function showApprovalDetail(code) {
+  document.getElementById('detailInstance').value = code;
+  switchView('detail');
+  loadDetail();
+}
+
+async function syncTasks() {
+  const limit = parseInt(document.getElementById('pendingLimit').value) || 10;
+  const r = await api('POST', '/api/pipeline/sync', { limit });
+  if (!r.ok) { toast('同步失败：' + r.error, 'err'); return; }
+  const d = r.data;
+  document.getElementById('pendingHint').innerHTML =
+    `同步完成：拉取 <b>${d.fetched}</b> 条，新建 <b style="color:#4ade9f">${d.created}</b> 条，` +
+    `增量更新 <b>${d.updated}</b> 条，去重跳过 <b>${d.skipped}</b> 条。` +
+    `<br><span style="color:#8fa0bf">按「审批编号」去重：已存在的任务只做增量更新，绝不重复创建。</span>`;
+  toast(`同步完成：新建 ${d.created}，更新 ${d.updated}，去重跳过 ${d.skipped}`, 'ok');
+}
+
+async function runAllPipeline() {
+  const btn = currentBtn(); busy(btn, true,'全量闭环执行中…');
+  const limit = parseInt(document.getElementById('pendingLimit').value) || 10;
+  const r = await api('POST', '/api/pipeline/sync_and_process', { limit });
+  busy(btn, false);
+  if (!r.ok) { toast('一键闭环失败：' + r.error, 'err'); return; }
+
+  const rows = r.data.processed;
+  document.getElementById('pendingTable').innerHTML = `<table><thead><tr>
+      <th>任务ID</th><th>审批编号</th><th>任务状态</th><th>回写状态</th><th>风险等级</th><th>命中</th><th>阻塞原因</th>
+    </tr></thead><tbody>${rows.map(i => `
+      <tr>
+        <td>${i.task_id}</td>
+        <td><code>${esc(i.approval_code)}</code></td>
+        <td>${taskStatusTag({ raw: i.task_status, cn: i.task_status_cn })}</td>
+        <td>${writeStatusTag(i.write_status, '')}</td>
+        <td>${i.overall_risk_level ? riskTag(i.overall_risk_level) : '<span class="tag gray">—</span>'}</td>
+        <td>${i.hit_count}</td>
+        <td style="color:#f7b3b3;font-size:12px">${esc(i.block_reason || '-')}</td>
+      </tr>`).join('')}</tbody></table>`;
+  toast(`全量闭环完成：处理 ${rows.length} 个任务`, 'ok');
+  checkHealth();
+}
+
+/* ==================================================================
+   五、② 详情查看模块
+   ================================================================== */
+async function loadDetail() {
+  const code = document.getElementById('detailInstance').value.trim();
+  if (!code) { toast('请输入审批编号', 'err'); return; }
+  const box = document.getElementById('detailBox');
+  box.innerHTML = loading('调用工具 2 查询审批详情…');
+
+  // 工具 2：从审批系统查询实时详情
+  const r = await api('POST', '/api/tools/get_contract_approval', { instance_id: code });
+  if (!r.ok) { box.innerHTML = show('查询失败：' + r.error); return; }
+  const d = r.data;
+  const b = d.basic_info || {};
+
+  // 同步查本地任务聚合（含附件落地信息、解析/命中/回写状态）
+  const t = await api('GET', '/api/tasks');
+  const local = (t.ok ? t.data.list : []).find(i => i.approval_code === code);
+  if (local) { S.taskId = local.task_id; S.code = code; }
+  let localDetail = null;
+  if (local) {
+    const dr = await api('GET', '/api/tasks/' + local.task_id);
+    if (dr.ok) { localDetail = dr.data; S.detail = dr.data; }
+  }
+
+  S.detail = localDetail;
+  const atts = (localDetail ? localDetail.attachments : d.attachments.map(a => ({ ...a, local: false })));
+  // 记录首个附件ID，供解析模块直接使用
+  if (localDetail && localDetail.attachments.length) {
+    document.getElementById('parseDocId').value = 'attach:' + localDetail.attachments[0].attachment_id;
+  } else {
+    document.getElementById('parseDocId').value = code;
+  }
+  document.getElementById('rulesCaseId').value = local ? local.task_id : code;
+  document.getElementById('currentTask').innerHTML =
+    '当前任务：<code>' + esc(code) + '</code>' + (local ? '　ID <code>' + local.task_id + '</code>' : '　（未入库）');
+
+  box.innerHTML = `
+    <div class="card">
+      <h3>审批基础信息与表单数据 <span class="sub">工具 2 返回：basic_info / form_data / current_status</span></h3>
+      <div class="body">
+        <div class="kv">
+          <div class="row"><span class="k">审批编号</span><span class="v"><code>${esc(b.approval_code || code)}</code></span></div>
+          <div class="row"><span class="k">审批标题</span><span class="v">${esc(b.approval_title)}</span></div>
+          <div class="row"><span class="k">申请人</span><span class="v">${esc(b.applicant_name)}</span></div>
+          <div class="row"><span class="k">申请时间</span><span class="v">${esc(b.apply_time)}</span></div>
+          <div class="row"><span class="k">申请部门</span><span class="v">${esc(b.department || '-')}</span></div>
+          <div class="row"><span class="k">当前处理人</span><span class="v">${esc(b.current_handler || '-')}</span></div>
+          <div class="row"><span class="k">当前处理状态</span><span class="v">${statusTag((d.current_status || {}).status || '-', 'blue')}</span></div>
+          <div class="row"><span class="k">评论数</span><span class="v">${(d.current_status || {}).comment_count ?? 0}</span></div>
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-size:12.5px;color:var(--dim);margin-bottom:8px">表单数据（form_data）</div>
+          <div class="kv">${Object.entries(d.form_data || {}).map(([k, v]) =>
+            `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')
+            || '<div class="row"><span class="v" style="color:var(--dim)">无表单数据</span></div>'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>附件信息 <span class="sub">工具 3：download_contract_attachment(instance_id, attachment_id, file_name)</span>
+        <span class="spacer"></span>
+        ${local ? `<button class="btn sm ghost" onclick="downloadAllAtts()">批量下载全部附件</button>` : ''}
+      </h3>
+      <div class="body tight">${atts.length ? `<table><thead><tr>
+        <th>附件编号</th><th>文件名</th><th>类型</th><th>文件大小</th><th>MD5 校验</th><th>下载状态</th><th>本地存储路径</th><th>操作</th>
+      </tr></thead><tbody>${atts.map(a => `
+        <tr>
+          <td><code>${esc(a.attachment_id)}</code></td>
+          <td>${esc(a.file_name)}</td>
+          <td>${statusTag(a.file_type || '-', 'gray')}</td>
+          <td>${a.file_size ? (a.file_size + ' 字节') : '-'}</td>
+          <td style="font-size:11.5px;font-family:Consolas,monospace;color:#9fd0ff">${esc(a.file_md5 || '-')}</td>
+          <td>${a.download_status
+                ? statusTag(a.download_status === 'success' ? '已下载' : a.download_status,
+                    a.download_status === 'success' ? 'low' : (a.download_status === 'failed' ? 'red' : 'gray'))
+                : statusTag('未落地', 'gray')}</td>
+          <td style="font-size:11.5px;color:var(--dim);word-break:break-all">${esc(a.file_path || '-')}</td>
+          <td>${local ? `<button class="btn sm" onclick="downloadAtt('${esc(code)}','${esc(a.attachment_id)}','${esc(a.file_name)}')">下载</button>` : '-'}</td>
+        </tr>`).join('')}</tbody></table>`
+        : show('该审批单未上传任何附件 —— 将触发「附件缺失」阻塞，需申请人补传后重试')}</div>
+    </div>
+
+    ${localDetail ? `
+    <div class="card">
+      <h3>任务处理状态 <span class="sub">任务状态流转：pending → parsing → reviewing → done，异常进入 blocked</span></h3>
+      <div class="body"><div class="kv">
+        <div class="row"><span class="k">任务ID</span><span class="v"><code>${localDetail.task.id}</code></span></div>
+        <div class="row"><span class="k">任务状态</span><span class="v">${taskStatusTag({ raw: localDetail.task.task_status, cn: localDetail.task.task_status_cn })}</span></div>
+        <div class="row"><span class="k">回写状态</span><span class="v">${writeStatusTag(localDetail.task.write_status, localDetail.task.write_status_cn)}</span></div>
+        <div class="row"><span class="k">阻塞原因</span><span class="v" style="color:#f7b3b3">${esc(localDetail.task.block_reason || '无')}</span></div>
+        <div class="row"><span class="k">重试次数</span><span class="v">${localDetail.task.retry_count}</span></div>
+        <div class="row"><span class="k">更新时间</span><span class="v">${esc(localDetail.task.updated_at)}</span></div>
+      </div>
+      ${localDetail.task.task_status === 'blocked' ? `
+        <div class="notice err" style="margin-top:14px">
+          <span>⛔</span>
+          <span>该任务已阻塞：<b>${esc(localDetail.task.block_reason)}</b>。
+          请管理员在「阻塞重试」模块修复根因后重试，系统不会给出猜测性结论。</span>
+        </div>` : ''}
+      </div>
+    </div>` : `
+    <div class="card"><div class="body">
+      <div class="notice warn" style="margin:0">
+        <span>ℹ️</span>
+        <span>该审批单尚未同步入库，仅展示审批系统实时数据。
+        点击「一键执行本任务闭环」或前往「待办调用 → 拉取并去重入库」后即可查看解析与风险结果。</span>
+      </div>
+    </div></div>`}`;
+}
+
+async function downloadAtt(code, attId, fileName) {
+  const r = await api('POST', '/api/tools/download_contract_attachment',
+    { instance_id: code, attachment_id: attId, file_name: fileName });
+  if (!r.ok) { toast('下载失败：' + r.error, 'err'); return; }
+  toast('下载成功：MD5 ' + (r.data.file_md5 || '').slice(0, 16) + '…', 'ok');
+  loadDetail();
+}
+
+async function downloadAllAtts() {
+  const list = (S.detail || {}).attachments || [];
+  if (!list.length) { toast('无附件可下载', 'err'); return; }
+  for (const a of list) {
+    const r = await api('POST', '/api/tools/download_contract_attachment',
+      { instance_id: S.code, attachment_id: a.attachment_id, file_name: a.file_name });
+    if (!r.ok) toast(a.file_name + ' 下载失败：' + r.error, 'err');
+  }
+  toast('附件下载完成', 'ok');
+  loadDetail();
+}
+
+async function runOnePipeline() {
+  if (!S.taskId) { toast('请先查询一个已入库的审批单', 'err'); return; }
+  const btn = currentBtn(); busy(btn, true,'闭环执行中…');
+  const r = await api('POST', '/api/pipeline/run', { task_id: S.taskId });
+  busy(btn, false);
+  if (!r.ok) { toast('闭环执行失败：' + r.error, 'err'); return; }
+  const st = r.data.task;
+  toast(`闭环执行完成：${st.task_status_cn}｜风险 ${(r.data.review || {}).overall_risk_level || '-'}`, 'ok');
+  loadDetail();
+  checkHealth();
+}
+
+/* ==================================================================
+   六、③ 解析结果模块
+   ================================================================== */
+async function doParse() {
+  const docId = document.getElementById('parseDocId').value.trim();
+  if (!docId) { toast('请输入文档标识（attach:附件ID 或 审批编号）', 'err'); return; }
+  const box = document.getElementById('parseBox');
+  const hint = document.getElementById('parseHint');
+  box.innerHTML = loading('调用工具 4 解析文档（含 OCR 识别）…');
+  hint.textContent = '';
+
+  const r = await api('POST', '/api/tools/parse_contract_document', { document_id: docId });
+  if (!r.ok) {
+    box.innerHTML = show('解析失败：' + r.error);
+    hint.innerHTML = '<span style="color:#ff8484">解析未成功，任务将进入阻塞态并记录具体失败原因，等待人工重试。</span>';
+    return;
+  }
+  S.parse = r.data;
+  renderParse(r.data);
+}
+
+/** 从本地已入库的解析结果渲染（读取 /api/tasks/{id}） */
+async function loadParseFromDetail() {
+  if (!S.taskId) { toast('请先在详情模块选择一个任务', 'err'); return; }
+  const r = await api('GET', '/api/tasks/' + S.taskId);
+  if (!r.ok) { toast('读取失败：' + r.error, 'err'); return; }
+  if (!r.data.parse) {
+    document.getElementById('parseBox').innerHTML =
+      show('该任务尚无解析结果，请点击「解析文档」执行工具 4');
+    return;
+  }
+  const p = r.data.parse;
+  renderParse({
+    document_id: 'attach:' + (r.data.parse.document_detail[0] || {}).attachment_id,
+    approval_code: r.data.task.approval_code,
+    file_name: (r.data.parse.document_detail[0] || {}).file_name,
+    file_type: (r.data.parse.document_detail[0] || {}).file_type,
+    ocr_provider: (r.data.parse.document_detail[0] || {}).ocr_provider,
+    parse_status: p.parse_status, parse_error: p.parse_error,
+    page_count: p.page_count, char_count: p.char_count,
+    basic_info: p.basic_info, clause_info: p.clause_info,
+    fields_summary: r.data.parse.document_detail[0]
+      ? { total_fields: 16,
+          success_fields: Object.values(p.basic_info || {}).filter(f => f.extract_status === 'success').length
+            + Object.values(p.clause_info || {}).filter(f => f.extract_status === 'success').length }
+      : {},
+    document_detail: p.document_detail,
+  });
+}
+
+function renderParse(d) {
+  const rec = d.fields_summary || {};
+  const total = rec.total_fields || 16;
+  const okCount = rec.success_fields || 0;
+  const rate = total ? Math.round(okCount / total * 100) : 0;
+
+  document.getElementById('parseHint').innerHTML =
+    `文档 <b>${esc(d.file_name || '')}</b> 解析状态 <b style="color:#4ade9f">${esc(d.parse_status || '-')}</b>，` +
+    `字段提取完整度 <b>${okCount}/${total}（${rate}%）</b>` +
+    (d.ocr_provider ? `，OCR 引擎：<b>${esc(d.ocr_provider)}</b>` : '');
+
+  const fieldCard = (title, obj) => `
+    <div class="card">
+      <h3>${esc(title)} <span class="sub">每项均含：字段值 / 原文片段 / 页码位置 / 提取状态 / 失败原因</span></h3>
+      <div class="body"><div class="fgrid">${Object.entries(obj || {}).map(([name, f]) => {
+        const good = f.extract_status === 'success';
+        return `<div class="fitem ${good ? '' : 'miss'}">
+          <div class="fh">
+            <span class="fn">${esc(name)}</span>
+            ${good ? statusTag('提取成功', 'low') : statusTag(f.extract_status === 'failed' ? '提取失败' : '未识别', 'red')}
+          </div>
+          <div class="fv ${good ? '' : 'none'}">${esc(f.value || f.value_display || '未从合同原文中提取到该字段')}</div>
+          ${f.evidence_text ? `<div class="evidence">${esc(f.evidence_text)}</div>` : ''}
+          <div class="pos">📍 <b>${esc(f.position || '全文检索（未定位到具体位置）')}</b>
+            <span style="margin-left:8px">提取方式：${esc(f.extract_method || '-')}</span></div>
+          ${f.error_msg ? `<div class="pos" style="color:#ff9c9c">失败原因：${esc(f.error_msg)}</div>` : ''}
+        </div>`;
+      }).join('')}</div></div>
+    </div>`;
+
+  document.getElementById('parseBox').innerHTML = `
+    <div class="card">
+      <h3>解析概览 <span class="sub">工具 4 返回：parse_status / page_count / char_count / fields_summary</span></h3>
+      <div class="body"><div class="kv">
+        <div class="row"><span class="k">审批编号</span><span class="v"><code>${esc(d.approval_code || '-')}</code></span></div>
+        <div class="row"><span class="k">文件名</span><span class="v">${esc(d.file_name || '-')}</span></div>
+        <div class="row"><span class="k">文件类型</span><span class="v">${esc(d.file_type || '-')}</span></div>
+        <div class="row"><span class="k">解析状态</span><span class="v">${statusTag(d.parse_status === 'success' ? '解析成功' : d.parse_status, d.parse_status === 'success' ? 'low' : 'red')}</span></div>
+        <div class="row"><span class="k">页数 / 字符数</span><span class="v">${d.page_count} 页 / ${d.char_count} 字</span></div>
+        <div class="row"><span class="k">字段完整度</span><span class="v">${okCount} / ${total}（${rate}%）</span></div>
+        <div class="row"><span class="k">OCR 引擎</span><span class="v">${esc(d.ocr_provider || '不适用（电子文档直接解析）')}</span></div>
+        <div class="row"><span class="k">解析错误</span><span class="v" style="color:#f7b3b3">${esc(d.parse_error || '无')}</span></div>
+      </div></div>
+    </div>
+    ${fieldCard('合同基本信息（8 项必备字段）', d.basic_info)}
+    ${fieldCard('合同条款信息（8 项必备条款）', d.clause_info)}
+    ${(d.document_detail || []).length > 1 ? `
+    <div class="card">
+      <h3>多附件解析明细 <span class="sub">当前任务包含 ${d.document_detail.length} 个文档</span></h3>
+      <div class="body tight"><table><thead><tr>
+        <th>附件编号</th><th>文件名</th><th>类型</th><th>解析状态</th><th>页数</th><th>字符数</th><th>OCR 引擎</th><th>错误</th>
+      </tr></thead><tbody>${d.document_detail.map(x => `
+        <tr><td><code>${esc(x.attachment_id)}</code></td><td>${esc(x.file_name)}</td>
+        <td>${esc(x.file_type)}</td>
+        <td>${statusTag(x.parse_status === 'success' ? '成功' : x.parse_status, x.parse_status === 'success' ? 'low' : 'red')}</td>
+        <td>${x.page_count}</td><td>${x.char_count}</td><td>${esc(x.ocr_provider || '-')}</td>
+        <td style="color:#f7b3b3;font-size:12px">${esc(x.parse_error || '-')}</td></tr>`).join('')}</tbody></table></div>
+    </div>` : ''}`;
+}
+
+/* ==================================================================
+   七、④ 规则命中模块
+   ================================================================== */
+async function doRunRules() {
+  const caseId = document.getElementById('rulesCaseId').value.trim();
+  if (!caseId) { toast('请输入案件标识（任务ID 或 审批编号）', 'err'); return; }
+  const box = document.getElementById('hitsBox');
+  box.innerHTML = loading('调用工具 5 执行全量风控规则审查…');
+  const r = await api('POST', '/api/tools/run_contract_rules', { case_id: caseId });
+  if (!r.ok) { box.innerHTML = show('规则审查失败：' + r.error); return; }
+  S.hitResult = r.data;
+  S.taskId = r.data.task_id; S.code = r.data.approval_code;
+  renderHits(r.data, true);
+}
+
+async function loadHitsFromDetail() {
+  if (!S.taskId) { toast('请先在详情模块选择一个任务', 'err'); return; }
+  const r = await api('GET', '/api/tasks/' + S.taskId);
+  if (!r.ok) { toast('读取失败：' + r.error, 'err'); return; }
+  renderHits({
+    task_id: S.taskId, approval_code: r.data.task.approval_code,
+    overall_risk_level: (r.data.review || {}).overall_risk_level,
+    hit_rules: r.data.hits,
+    hit_count: r.data.hits.length,
+    high_count: r.data.hits.filter(h => h.risk_level === '高').length,
+    medium_count: r.data.hits.filter(h => h.risk_level === '中').length,
+    low_count: r.data.hits.filter(h => h.risk_level === '低').length,
+    rule_total: null,
+    summary_text: (r.data.review || {}).summary_text,
+    focus_points: (r.data.review || {}).focus_points || [],
+  }, false);
+}
+
+function renderHits(d, fromTool) {
+  const hits = d.hit_rules || [];
+  const overall = d.overall_risk_level || '低';
+  const levelOf = l => hits.filter(h => h.risk_level === l).length;
+
+  const head = `
+    <div class="stats">
+      <div class="stat"><div class="k">总风险等级</div>
+        <div class="v" style="color:${overall === '高' ? 'var(--high)' : overall === '中' ? 'var(--mid)' : 'var(--low)'}">${esc(overall)}</div>
+        <div class="k" style="margin-top:5px">取全部命中的最高等级</div></div>
+      <div class="stat"><div class="k">命中规则总数</div><div class="v">${hits.length}</div>
+        <div class="k" style="margin-top:5px">${fromTool && d.rule_total ? ('参与匹配规则 ' + d.rule_total + ' 条') : '当前有效命中'}</div></div>
+      <div class="stat"><div class="k">高风险</div><div class="v" style="color:var(--high)">${levelOf('高')}</div></div>
+      <div class="stat"><div class="k">中风险</div><div class="v" style="color:var(--mid)">${levelOf('中')}</div></div>
+      <div class="stat"><div class="k">低风险</div><div class="v" style="color:var(--low)">${levelOf('低')}</div></div>
+    </div>`;
+
+  const list = hits.length ? hits.map((h, i) => `
+    <div class="hit ${riskCls(h.risk_level)}">
+      <div class="head">
+        ${riskTag(h.risk_level)}
+        <span class="name">${i + 1}. ${esc(h.rule_name)}</span>
+        <code>${esc(h.rule_code)}</code>
+        ${h.hit_status ? statusTag(h.hit_status === 'hit' ? '已命中' : h.hit_status, 'gray') : ''}
+      </div>
+      <div class="lbl">命中证据（合同原文）</div>
+      <div class="evidence">${esc(h.evidence_text || '（无证据原文）')}</div>
+      <div class="pos">📍 内容位置：<b>${esc(h.evidence_position || '全文检索（未命中）')}</b></div>
+      <div class="lbl">标准化处理建议</div>
+      <div style="font-size:13px;color:#cfe0fa">${esc(h.suggestion_text || '-')}</div>
+    </div>`).join('')
+    : `<div class="notice" style="margin:0">
+         <span>✅</span><span>未命中任何风险规则：该合同在现有 ${d.rule_total || '全部'} 条风控规则下未发现风险项。
+         仍建议人工法务结合商务背景进行复核。</span></div>`;
+
+  document.getElementById('hitsBox').innerHTML = head + `
+    <div class="card">
+      <h3>风险明细 <span class="sub">每条含：规则名称 / 风险等级 / 命中证据原文 / 证据位置 / 处理建议</span></h3>
+      <div class="body">${list}</div>
+    </div>
+    ${d.summary_text ? `
+    <div class="card">
+      <h3>风险摘要与审批关注点 <span class="sub">供审批人快速掌握要点</span></h3>
+      <div class="body">
+        <div class="evidence" style="border-left-color:var(--mid)">${esc(d.summary_text)}</div>
+        ${(d.focus_points || []).length ? `
+          <div style="font-size:12.5px;color:var(--dim);margin:14px 0 8px">审批关注点（${d.focus_points.length} 条）</div>
+          <ol style="padding-left:22px;font-size:13px;line-height:1.9">${d.focus_points.map(p =>
+            `<li>${esc(typeof p === 'string' ? p : (p.text || p.content || JSON.stringify(p)))}</li>`).join('')}</ol>` : ''}
+      </div>
+    </div>` : ''}`;
+}
+
+/* ==================================================================
+   八、⑤ 结果处理模块
+   ================================================================== */
+async function loadResultFromDetail() {
+  if (!S.taskId) { toast('请先在详情模块选择一个任务', 'err'); return; }
+  const r = await api('GET', '/api/tasks/' + S.taskId);
+  if (!r.ok) { toast('读取失败：' + r.error, 'err'); return; }
+  S.detail = r.data;
+  S.review = r.data.review;
+  renderResult(r.data);
+}
+
+async function doSaveResult() {
+  if (!S.taskId) { toast('请先选择一个任务', 'err'); return; }
+  const btn = currentBtn(); busy(btn, true,'保存中…');
+  try {
+    // 未执行过规则审查时先自动执行一次，保证保存内容完整
+    let review = S.hitResult;
+    if (!review) {
+      const rr = await api('POST', '/api/tools/run_contract_rules', { case_id: String(S.taskId) });
+      if (!rr.ok) { toast('前置规则审查失败：' + rr.error, 'err'); return; }
+      review = rr.data; S.hitResult = rr.data;
+      renderHits(rr.data, true);
+    }
+    const res = await api('POST', '/api/tools/save_review_result', {
+      case_id: String(S.taskId),
+      overall_risk_level: review.overall_risk_level,
+      summary_text: review.summary_text,
+      focus_points_json: review.focus_points || [],
+      comment_text: '',
+    });
+    if (!res.ok) { toast('保存失败：' + res.error, 'err'); return; }
+    S.review = res.data;
+    toast(`审查结果已入库：review_id=${res.data.review_id}，命中 ${res.data.hit_count} 条`, 'ok');
+    document.getElementById('resultHint').innerHTML =
+      `审查结果保存成功：<b>review_id = ${res.data.review_id}</b>，命中规则 ${res.data.hit_count} 条，保存时间 ${esc(res.data.saved_at)}`;
+    await loadResultFromDetail();
+  } finally { busy(btn, false); }
+}
+
+async function doWriteComment() {
+  if (!S.code) { toast('请先选择一个任务', 'err'); return; }
+  const btn = currentBtn(); busy(btn, true,'回写中…');
+  try {
+    if (!S.review || !S.review.review_id) {
+      toast('请先执行「保存审查结果」获得 review_id', 'err');
+      return;
+    }
+    const r = await api('POST', '/api/tools/write_approval_comment',
+      { instance_id: S.code, review_id: S.review.review_id });
+    if (!r.ok) { toast('回写失败：' + r.error, 'err'); return; }
+    const st = r.data.write_status;
+    toast(st === 'success' ? '评论已成功回写至审批系统' : ('回写状态：' + st), st === 'success' ? 'ok' : 'err');
+    document.getElementById('resultHint').innerHTML =
+      `回写状态：<b>${esc(st)}</b>　评论长度：<b>${(r.data.comment_text || '').length}</b> 字符`;
+    await loadResultFromDetail();
+    checkHealth();
+  } finally { busy(btn, false); }
+}
+
+function renderResult(d) {
+  const t = d.task, rev = d.review;
+  const commentLogs = d.comment_logs || [];
+  const lastLog = commentLogs[0] || null;
+
+  const head = `
+    <div class="stats">
+      <div class="stat"><div class="k">结果保存状态</div>
+        <div class="v small" style="color:${rev ? 'var(--low)' : 'var(--dim)'};margin-top:9px">
+          ${rev ? '已入库' : '未保存'}</div>
+        <div class="k" style="margin-top:5px">${rev ? ('review_id = ' + rev.review_id + '，' + esc(rev.created_at)) : '尚未调用工具 6'}</div></div>
+      <div class="stat"><div class="k">评论回写状态</div>
+        <div class="v small" style="margin-top:9px">${writeStatusTag(t.write_status, t.write_status_cn)}</div>
+        <div class="k" style="margin-top:5px">${lastLog ? ('HTTP ' + esc(lastLog.http_status) + '，' + esc(lastLog.created_at)) : '暂无回写记录'}</div></div>
+      <div class="stat"><div class="k">总风险等级</div>
+        <div class="v" style="color:${(rev && rev.overall_risk_level === '高') ? 'var(--high)' : (rev && rev.overall_risk_level === '中') ? 'var(--mid)' : 'var(--low)'}">
+          ${rev ? esc(rev.overall_risk_level) : '—'}</div>
+        <div class="k" style="margin-top:5px">${rev ? ('命中 ' + rev.hit_count + ' 条') : ''}</div></div>
+      <div class="stat"><div class="k">任务状态</div>
+        <div class="v small" style="margin-top:9px">${taskStatusTag({ raw: t.task_status, cn: t.task_status_cn })}</div>
+        <div class="k" style="margin-top:5px">重试 ${t.retry_count} 次</div></div>
+    </div>`;
+
+  if (!rev) {
+    document.getElementById('resultBox').innerHTML = head + `
+      <div class="card"><div class="body">
+        <div class="notice warn" style="margin:0"><span>ℹ️</span>
+        <span>该任务尚无审查结果。请先执行「规则命中」模块的规则审查，或直接点击上方「保存审查结果」
+        （系统会自动补做一次规则审查后入库）。</span></div>
+        ${t.block_reason ? `<div class="notice err" style="margin:14px 0 0"><span>⛔</span>
+          <span>当前任务处于阻塞态：<b>${esc(t.block_reason)}</b>，需人工处理根因后重试。</span></div>` : ''}
+      </div></div>`;
+    return;
+  }
+
+  document.getElementById('resultBox').innerHTML = head + `
+    <div class="card">
+      <h3>审查结果详情 <span class="sub">review_results 表 · review_id = ${rev.review_id}</span></h3>
+      <div class="body"><div class="kv">
+        <div class="row"><span class="k">审批编号</span><span class="v"><code>${esc(t.approval_code)}</code></span></div>
+        <div class="row"><span class="k">总风险等级</span><span class="v">${riskTag(rev.overall_risk_level)}</span></div>
+        <div class="row"><span class="k">命中规则数</span><span class="v">${rev.hit_count} 条（高 ${rev.high_count} / 中 ${rev.medium_count} / 低 ${rev.low_count}）</span></div>
+        <div class="row"><span class="k">保存时间</span><span class="v">${esc(rev.created_at)}</span></div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:12.5px;color:var(--dim);margin-bottom:8px">风险摘要（summary_text）</div>
+        <div class="evidence" style="border-left-color:var(--mid)">${esc(rev.summary_text)}</div>
+      </div>
+      ${(rev.focus_points || []).length ? `
+      <div style="margin-top:14px">
+        <div style="font-size:12.5px;color:var(--dim);margin-bottom:8px">审批关注点（focus_points_json，共 ${rev.focus_points.length} 条）</div>
+        <ol style="padding-left:22px;font-size:13px;line-height:1.9">${rev.focus_points.map(p =>
+          `<li>${esc(typeof p === 'string' ? p : (p.text || p.content || JSON.stringify(p)))}</li>`).join('')}</ol>
+      </div>` : ''}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>回写日志 <span class="sub">comment_logs 表 · 每次回写的状态与审批系统响应原文</span></h3>
+      <div class="body tight">${commentLogs.length ? `<table><thead><tr>
+        <th>时间</th><th>回写状态</th><th>HTTP</th><th>审批系统响应</th>
+      </tr></thead><tbody>${commentLogs.map(c => `
+        <tr><td>${esc(c.created_at)}</td>
+        <td>${writeStatusTag(c.write_status, '')}</td>
+        <td>${esc(c.http_status)}</td>
+        <td style="font-size:12px;color:var(--muted);word-break:break-all">${esc(c.write_response_text || '-')}</td></tr>`).join('')}
+      </tbody></table>` : show('暂无回写记录')}</div>
+    </div>
+
+    <div class="card">
+      <h3>最终输出内容 <span class="sub">回写至审批系统评论区的标准化审查意见（comment_text）</span>
+        <span class="spacer"></span>
+        <button class="btn sm ghost" onclick="copyComment()">复制全文</button>
+      </h3>
+      <div class="body">
+        <div class="comment-box" id="commentText">${esc(rev.comment_text || '（尚未生成评论内容，请点击上方「回写审批评论」）')}</div>
+        <div class="pos" style="margin-top:9px">
+          评论长度：<b>${(rev.comment_text || '').length}</b> 字符 ·
+          结构化输出六段：合同基本信息 / 总体风险等级 / 风险明细 / 审批关注点 / 风险摘要 / 说明
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>任务执行日志 <span class="sub">task_logs 表 · 全链路留痕（最近 60 条）</span></h3>
+      <div class="body tight">${(d.logs || []).slice(0, 60).map(l => `
+        <div class="log-line">
+          <span class="t">${esc(l.created_at)}</span>
+          <span class="lv ${esc(l.log_level)}">${esc(l.log_level)}</span>
+          <span class="msg">${esc(l.log_content)}</span>
+        </div>`).join('') || show('暂无日志')}</div>
+    </div>`;
+}
+
+function copyComment() {
+  const el = document.getElementById('commentText');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(
+    () => toast('评论全文已复制到剪贴板', 'ok'),
+    () => toast('复制失败，请手动选择复制', 'err'));
+}
+
+/* ==================================================================
+   九、阻塞任务与重试
+   ================================================================== */
+async function loadBlocked() {
+  const box = document.getElementById('blockedTable');
+  box.innerHTML = loading('加载阻塞任务…');
+  const r = await api('GET', '/api/admin/blocked_tasks');
+  if (!r.ok) { box.innerHTML = show('加载失败：' + r.error); return; }
+
+  const badge = document.getElementById('blockedBadge');
+  if (r.data.total > 0) { badge.textContent = r.data.total; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+
+  if (!r.data.total) { box.innerHTML = show('当前没有阻塞任务'); return; }
+  box.innerHTML = `<table><thead><tr>
+      <th>任务ID</th><th>审批编号</th><th>审批标题</th><th>申请人</th>
+      <th>阻塞原因</th><th>重试次数</th><th>更新时间</th><th>操作</th>
+    </tr></thead><tbody>${r.data.list.map(i => `
+      <tr>
+        <td>${i.task_id}</td>
+        <td><code>${esc(i.approval_code)}</code></td>
+        <td>${esc(i.approval_title)}</td>
+        <td>${esc(i.applicant_name)}</td>
+        <td><span class="tag red">${esc(i.block_reason)}</span></td>
+        <td>${i.retry_count}</td>
+        <td style="font-size:12px;color:var(--dim)">${esc(i.updated_at)}</td>
+        <td><button class="btn sm warn" onclick="retryOne(${i.task_id})">人工重试</button></td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+async function retryOne(taskId) {
+  const btn = currentBtn(); busy(btn, true,'重试中…');
+  try {
+    const operator = document.getElementById('operator').value.trim() || '系统管理员';
+    const r = await api('POST', '/api/admin/retry/' + taskId, null, { operator });
+    if (!r.ok) { toast('重试失败：' + r.error, 'err'); return; }
+    const st = r.data.task;
+    if (st.task_status === 'done') {
+      toast(`重试成功：任务 ${taskId} 已完成闭环，风险 ${(r.data.review || {}).overall_risk_level || '-'}`, 'ok');
+    } else {
+      toast(`重试后仍阻塞：${st.block_reason}（原始材料不可用，需人工处理）`, 'err');
+    }
+    loadBlocked();
+    checkHealth();
+  } finally { busy(btn, false); }
+}
+
+async function retryAllBlocked() {
+  const btn = currentBtn(); busy(btn, true,'批量重试中…');
+  try {
+    const list = await api('GET', '/api/admin/blocked_tasks');
+    if (!list.ok || !list.data.total) { toast('当前没有阻塞任务', 'err'); return; }
+    const operator = document.getElementById('operator').value.trim() || '系统管理员';
+    const r = await api('POST', '/api/admin/retry_batch',
+      { task_ids: list.data.list.map(i => i.task_id), operator });
+    if (!r.ok) { toast('批量重试失败：' + r.error, 'err'); return; }
+    const okn = r.data.results.filter(x => x.success).length;
+    toast(`批量重试完成：成功 ${okn} 个 / 共 ${r.data.total} 个`, okn ? 'ok' : 'err');
+    loadBlocked();
+    checkHealth();
+  } finally { busy(btn, false); }
+}
+
+/* ==================================================================
+   十、规则管理
+   ================================================================== */
+async function loadRules() {
+  const box = document.getElementById('rulesTable');
+  box.innerHTML = loading('加载规则库…');
+  const params = {
+    rule_status: document.getElementById('ruleStatusFilter').value,
+    keyword: document.getElementById('ruleKeyword').value.trim(),
+  };
+  const r = await api('GET', '/api/admin/rules', null, params);
+  if (!r.ok) { box.innerHTML = show('加载失败：' + r.error); return; }
+
+  const modeCn = r.data.match_mode_cn || {};
+  const statusCn = r.data.rule_status_cn || {};
+  box.innerHTML = `<table><thead><tr>
+      <th>排序</th><th>规则编码</th><th>规则名称</th><th>风险等级</th><th>匹配模式</th>
+      <th>匹配内容</th><th>整改建议</th><th>状态</th><th>操作</th>
+    </tr></thead><tbody>${r.data.list.map(x => `
+      <tr>
+        <td>${x.sort_no}</td>
+        <td><code>${esc(x.rule_code)}</code></td>
+        <td>${esc(x.rule_name)}</td>
+        <td>${riskTag(x.risk_level)}</td>
+        <td>${statusTag(modeCn[x.match_mode] || x.match_mode, 'blue')}</td>
+        <td style="font-size:12px;max-width:260px;word-break:break-all;color:#9fd0ff">${esc(x.match_text)}</td>
+        <td style="font-size:12px;max-width:340px;color:var(--muted)">${esc(x.suggestion_text)}</td>
+        <td>${statusTag(x.rule_status === 'enabled' ? '启用' : '停用', x.rule_status === 'enabled' ? 'low' : 'gray')}</td>
+        <td><button class="btn sm ${x.rule_status === 'enabled' ? 'ghost' : 'ok'}"
+             onclick="toggleRule(${x.id},'${x.rule_status === 'enabled' ? 'disabled' : 'enabled'}')">
+             ${x.rule_status === 'enabled' ? '停用' : '启用'}</button></td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+async function toggleRule(ruleId, status) {
+  const r = await api('POST', `/api/admin/rules/${ruleId}/status`, null, { rule_status: status });
+  if (!r.ok) { toast('操作失败：' + r.error, 'err'); return; }
+  toast(status === 'enabled' ? '规则已启用' : '规则已停用', 'ok');
+  loadRules();
+}
+
+/* ==================================================================
+   十一、运行日志
+   ================================================================== */
+async function loadLogs() {
+  const box = document.getElementById('logsBox');
+  box.innerHTML = loading('加载运行日志…');
+  const r = await api('GET', '/api/admin/logs', null, {
+    task_id: document.getElementById('logTaskId').value.trim(),
+    log_level: document.getElementById('logLevel').value,
+    log_type: document.getElementById('logType').value,
+    limit: 300,
+  });
+  if (!r.ok) { box.innerHTML = show('加载失败：' + r.error); return; }
+  if (!r.data.list.length) { box.innerHTML = show('暂无日志'); return; }
+  box.innerHTML = `<div style="padding:9px 14px;font-size:12px;color:var(--dim);border-bottom:1px solid var(--line)">
+      共 ${r.data.total} 条记录，当前展示 ${r.data.list.length} 条</div>`
+    + r.data.list.map(l => `
+      <div class="log-line">
+        <span class="t">${esc(l.created_at)}</span>
+        <span class="lv ${esc(l.log_level)}">${esc(l.log_level)}</span>
+        <span class="msg">${esc(l.log_content)}
+          ${l.trace_id ? `<span style="color:var(--dim);font-size:11px"> · trace ${esc(l.trace_id)}</span>` : ''}</span>
+      </div>`).join('');
+}
+
+async function loadCommentLogs() {
+  const box = document.getElementById('logsBox');
+  box.innerHTML = loading('加载评论回写日志…');
+  const r = await api('GET', '/api/admin/comment_logs', null,
+    { task_id: document.getElementById('logTaskId').value.trim(), limit: 200 });
+  if (!r.ok) { box.innerHTML = show('加载失败：' + r.error); return; }
+  if (!r.data.list.length) { box.innerHTML = show('暂无回写记录'); return; }
+  box.innerHTML = `<table><thead><tr>
+      <th>任务ID</th><th>审批编号</th><th>回写状态</th><th>HTTP</th><th>评论长度</th><th>时间</th><th>响应</th>
+    </tr></thead><tbody>${r.data.list.map(c => `
+      <tr>
+        <td>${c.task_id}</td>
+        <td><code>${esc(c.approval_code || '-')}</code></td>
+        <td>${writeStatusTag(c.write_status, '')}</td>
+        <td>${esc(c.http_status)}</td>
+        <td>${(c.comment_text || '').length}</td>
+        <td style="font-size:12px;color:var(--dim)">${esc(c.created_at)}</td>
+        <td style="font-size:12px;color:var(--muted);max-width:380px;word-break:break-all">${esc(c.write_response_text || '-')}</td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+/* ==================================================================
+   十二、初始化
+   ================================================================== */
+(async function init() {
+  await checkHealth();
+  await loadOverview();
+  const b = await api('GET', '/api/admin/blocked_tasks');
+  if (b.ok && b.data.total > 0) {
+    const badge = document.getElementById('blockedBadge');
+    badge.textContent = b.data.total;
+    badge.classList.remove('hidden');
+  }
+  setInterval(checkHealth, 30000);
+})();
+</script>
+</body>
+</html>
